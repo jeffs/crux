@@ -67,7 +67,24 @@ build: generate
         -configuration Debug \
         ONLY_ACTIVE_ARCH=YES \
         -skipPackagePluginValidation \
+        -derivedDataPath DerivedData \
         build
+
+# builds the iOS app and launches it in the simulator (generates first)
+run-ios device="iPhone 16": generate
+    @echo '{{ style("command") }}run-ios:{{ NORMAL }}'
+    xcodebuild \
+        -project CounterApp.xcodeproj \
+        -scheme CounterApp-iOS \
+        -configuration Debug \
+        -destination 'platform=iOS Simulator,name={{ device }}' \
+        -skipPackagePluginValidation \
+        -derivedDataPath DerivedData \
+        build
+    xcrun simctl bootstatus '{{ device }}' -b
+    open -b com.apple.dt.Devices
+    xcrun simctl install '{{ device }}' DerivedData/Build/Products/Debug-iphonesimulator/CounterApp-iOS.app
+    xcrun simctl launch '{{ device }}' com.crux.examples.counter.CounterApp-iOS
 
 # runs tests
 test:
