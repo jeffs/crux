@@ -116,7 +116,7 @@ handle any other effects that your core might ask for.
 For example, if your core needs to make an HTTP
 request, you would handle that here. To see an example
 of this, take a look at the
-[counter example](https://github.com/redbadger/crux/tree/master/examples/counter/web-leptos/src/core.rs)
+[counter HTTP example](https://github.com/redbadger/crux/blob/master/examples/counter-http/web-leptos/src/core.rs)
 in the Crux repository.
 ```
 
