@@ -106,8 +106,8 @@ impl LocalWeather {
     ) -> Outcome<Self, LocalWeatherTransition, LocalWeatherEvent> {
         match event {
             LocalWeatherEvent::Retry => {
-                let Started { state, command } = Self::start();
-                Outcome::continuing(state, command)
+                let Started { state, start_cmd } = Self::start();
+                Outcome::continuing(state, start_cmd)
             }
             LocalWeatherEvent::LocationEnabled(enabled) => {
                 tracing::debug!("location enabled: {enabled}");
