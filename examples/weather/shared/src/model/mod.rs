@@ -10,13 +10,14 @@ use serde::{Deserialize, Serialize};
 
 use crate::effects::Effect;
 
-pub use self::active::ActiveEvent;
-pub use self::active::ActiveModel;
+pub use self::active::{ActiveEvent, ActiveModel};
 pub use self::initializing::InitializingEvent;
-use self::initializing::InitializingModel;
 pub use self::onboard::OnboardEvent;
 
-use self::onboard::OnboardModel;
+use self::active::ActiveTransition;
+use self::initializing::{InitializingModel, InitializingTransition};
+use self::onboard::{OnboardModel, OnboardReason, OnboardTransition};
+use self::outcome::{Outcome, Started, Status};
 
 // ANCHOR: event
 /// The top-level event type, namespaced by lifecycle stage.
@@ -89,31 +90,23 @@ impl Model {
             *self = owned;
             return Command::done();
         };
-        let (status, command) = initializing
-            .update(event)
-            .map_event(Event::Initializing)
-            .into_parts();
+        let Outcome { status, command } = initializing.update(event).map_event(Event::Initializing);
         match status {
-            outcome::Status::Continue(initializing) => {
-                *self = Self::Initializing(initializing);
+            Status::Continue(state) => {
+                *self = Self::Initializing(state);
                 command
             }
-            outcome::Status::Complete(initializing::InitializingTransition::Onboard(favorites)) => {
-                let (onboard, start_cmd) =
-                    OnboardModel::start(onboard::OnboardReason::default(), favorites)
-                        .map_event(Event::Onboard)
-                        .into_parts();
-                *self = Self::Onboard(onboard);
+            Status::Complete(InitializingTransition::Onboard(favorites)) => {
+                let Started { state, start_cmd } =
+                    OnboardModel::start(OnboardReason::default(), favorites)
+                        .map_event(Event::Onboard);
+                *self = Self::Onboard(state);
                 command.and(start_cmd)
             }
-            outcome::Status::Complete(initializing::InitializingTransition::Active(
-                api_key,
-                favorites,
-            )) => {
-                let (active, start_cmd) = ActiveModel::start(api_key, favorites)
-                    .map_event(Event::Active)
-                    .into_parts();
-                *self = Self::Active(active);
+            Status::Complete(InitializingTransition::Active(api_key, favorites)) => {
+                let Started { state, start_cmd } =
+                    ActiveModel::start(api_key, favorites).map_event(Event::Active);
+                *self = Self::Active(state);
                 command.and(start_cmd)
             }
         }
@@ -128,18 +121,18 @@ impl Model {
         };
         let (status, command) = config.update(event).map_event(Event::Onboard).into_parts();
         match status {
-            outcome::Status::Continue(config) => {
+            Status::Continue(config) => {
                 *self = Self::Onboard(config);
                 command
             }
-            outcome::Status::Complete(onboard::OnboardTransition::Active(api_key, favorites)) => {
+            Status::Complete(OnboardTransition::Active(api_key, favorites)) => {
                 let (active, start_cmd) = ActiveModel::start(api_key, favorites)
                     .map_event(Event::Active)
                     .into_parts();
                 *self = Self::Active(active);
                 command.and(start_cmd)
             }
-            outcome::Status::Complete(onboard::OnboardTransition::Failed(msg)) => {
+            Status::Complete(OnboardTransition::Failed(msg)) => {
                 *self = Self::Failed(msg);
                 command
             }
@@ -157,21 +150,20 @@ impl Model {
             .map_event(Event::Active)
             .into_parts();
         match status {
-            outcome::Status::Continue(active_model) => {
+            Status::Continue(active_model) => {
                 *self = Self::Active(active_model);
                 command
             }
-            outcome::Status::Complete(active::ActiveTransition::ResetApiKey(favorites)) => {
-                let (onboard, start_cmd) =
-                    OnboardModel::start(onboard::OnboardReason::Reset, favorites)
-                        .map_event(Event::Onboard)
-                        .into_parts();
+            Status::Complete(ActiveTransition::ResetApiKey(favorites)) => {
+                let (onboard, start_cmd) = OnboardModel::start(OnboardReason::Reset, favorites)
+                    .map_event(Event::Onboard)
+                    .into_parts();
                 *self = Self::Onboard(onboard);
                 command.and(start_cmd)
             }
-            outcome::Status::Complete(active::ActiveTransition::Unauthorized(favorites)) => {
+            Status::Complete(ActiveTransition::Unauthorized(favorites)) => {
                 let (onboard, start_cmd) =
-                    OnboardModel::start(onboard::OnboardReason::Unauthorized, favorites)
+                    OnboardModel::start(OnboardReason::Unauthorized, favorites)
                         .map_event(Event::Onboard)
                         .into_parts();
                 *self = Self::Onboard(onboard);

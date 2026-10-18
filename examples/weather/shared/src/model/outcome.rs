@@ -49,19 +49,19 @@ pub(crate) enum Status<S, T> {
 /// a wider parent event before returning it from the parent's own logic.
 pub(crate) struct Started<S, Event> {
     pub state: S,
-    pub command: Command<Effect, Event>,
+    pub start_cmd: Command<Effect, Event>,
 }
 
 impl<S, Event> Started<S, Event> {
     /// Creates a new `Started` from an initial state and its accompanying
     /// command.
-    pub const fn new(state: S, command: Command<Effect, Event>) -> Self {
-        Self { state, command }
+    pub const fn new(state: S, start_cmd: Command<Effect, Event>) -> Self {
+        Self { state, start_cmd }
     }
 
     /// Destructures into the initial state and the command to run.
     pub fn into_parts(self) -> (S, Command<Effect, Event>) {
-        (self.state, self.command)
+        (self.state, self.start_cmd)
     }
 
     /// Lifts the event type of the inner command.
@@ -78,7 +78,7 @@ impl<S, Event> Started<S, Event> {
     {
         Started {
             state: self.state,
-            command: self.command.map_event(f),
+            start_cmd: self.start_cmd.map_event(f),
         }
     }
 }
