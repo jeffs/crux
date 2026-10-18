@@ -74,7 +74,7 @@ impl HomeScreen {
     /// Starts the home screen by kicking off both sub-workflows in parallel:
     /// the local-weather permission check and the per-favourite weather
     /// fetches. The returned command combines both.
-    pub(crate) fn start(favorites: &Favorites, api_key: &ApiKey) -> Started<Self, HomeEvent> {
+    pub(crate) fn start(favorites: Favorites, api_key: &ApiKey) -> Started<Self, HomeEvent> {
         tracing::debug!("starting home screen");
 
         let (current_weather, local_cmd) = LocalWeather::start()
@@ -201,7 +201,7 @@ mod tests {
         favorites.insert(test_fav);
 
         let api_key = test_api_key();
-        let (screen, mut cmd) = HomeScreen::start(&favorites, &api_key).into_parts();
+        let (screen, mut cmd) = HomeScreen::start(favorites, &api_key).into_parts();
 
         assert_eq!(screen.favorites_weather.len(), 1);
         assert_eq!(
@@ -227,7 +227,7 @@ mod tests {
         }));
 
         let api_key = test_api_key();
-        let (screen, mut cmd) = HomeScreen::start(&favorites, &api_key).into_parts();
+        let (screen, mut cmd) = HomeScreen::start(favorites, &api_key).into_parts();
 
         assert_eq!(screen.favorites_weather.len(), 2);
 

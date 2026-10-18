@@ -81,3 +81,12 @@ impl Favorites {
         self.0.iter().any(|fav| &fav.location() == location)
     }
 }
+
+impl IntoIterator for Favorites {
+    type Item = Favorite;
+    type IntoIter = <Vec<Favorite> as IntoIterator>::IntoIter;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.0.into_iter()
+    }
+}
