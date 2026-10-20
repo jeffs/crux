@@ -20,7 +20,7 @@ in their raw form, they take serialized values as byte buffers.
 We skimmed over the return value of `update` very quickly. In that case it only ever
 returned a request for a `RenderOperation` - a signal that a new view model is available.
 
-In the Weather's case, more options are possible. Recall the effect type:
+In Weather's case, more options are possible. Recall the effect type:
 
 ```rust
 {{#include ../../../examples/weather/shared/src/effects/mod.rs:effect}}
