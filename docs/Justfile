@@ -5,9 +5,25 @@ default: dev
 # check required docs tooling
 doctor:
     @echo '{{ style("command") }}doctor:{{ NORMAL }}'
-    @just lib::require-tool mdbook "cargo install mdbook"
+    @just lib::require-tool mdbook "cargo install mdbook --version '{{ mdbook_version }}' --locked"
+    @just _require-mdbook-version
     @just lib::require-tool mdbook-admonish "cargo install mdbook-admonish"
     @just lib::require-tool mdbook-linkcheck "cargo install mdbook-linkcheck"
+
+# mdbook-admonish 1.20.0 depends on mdbook ^0.4.40 and cannot parse
+# the preprocessor input from mdbook 0.5
+mdbook_version := "^0.4.40"
+
+# (internal) check mdbook is a 0.4 release, and fail if not
+[script('bash')]
+_require-mdbook-version:
+    actual=$(mdbook --version 2>/dev/null | head -n 1)
+    if [[ "$actual" =~ ^mdbook\ v0\.4\.([0-9]+) ]] && [ "${BASH_REMATCH[1]}" -ge 40 ]; then
+        echo "  ✓ $actual ({{ mdbook_version }})"
+    else
+        echo "  {{ style("error") }}✗ $actual{{ NORMAL }} — mdbook-admonish needs mdbook {{ mdbook_version }}; install with: cargo install mdbook --version '{{ mdbook_version }}' --locked"
+        exit 1
+    fi
 
 # build the book with configured preprocessors/checkers
 build:
