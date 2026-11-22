@@ -68,7 +68,7 @@ export class Core {
       Random: (e): void => {
         const min = Number(e.value.field0);
         const max = Number(e.value.field1);
-        const result = Math.floor(Math.random() * (max - min)) + min;
+        const result = Math.floor(Math.random() * (max - min + 1)) + min;
         this.respond(id, (s) => new RandomNumber(BigInt(result)).serialize(s));
       },
     });

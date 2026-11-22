@@ -35,7 +35,7 @@ impl RngHandler {
                 #[allow(clippy::cast_sign_loss)]
                 let top = (to - from) as usize;
                 #[allow(clippy::cast_possible_wrap)]
-                let out = rng.random_range(0..top) as isize + from;
+                let out = rng.random_range(0..=top) as isize + from;
 
                 if let Some(sink) = sink.upgrade() {
                     sink.resolve_request(&mut request, RandomNumber(out))
